@@ -1,6 +1,6 @@
 # All about LibBitmap
 ## Disclaimer
-* Unauthorized distribution of any kind is STRICTLY PROHIBITED. The term Distribution here stands for using LibBitmap or part of its sourcecode in a file that possibly accesible to someone other than you. This restriction is due to the school's requirement and will stay in effect till 16 January 2019.
+* Unauthorized distribution of any kind is STRICTLY PROHIBITED. The term Distribution here stands for using LibBitmap or part of its sourcecode in a file that possibly accesible to someone other than you. This restriction is due to the school's requirement and will stay in effect till 16 January 2020.
 * LibBitmap is still under frequent iteration, and it's NOT guaranteed to be bug free.
 * LibBitmap uses unsafe and outdated I/O functions. USE IT AT YOUR OWN RISK.
 
