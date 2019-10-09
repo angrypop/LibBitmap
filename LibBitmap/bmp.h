@@ -8,7 +8,7 @@ class Color {
     enum EncodeType { RGB, YUV } Type;
     int R, G, B;
     Color(int inR, int inG, int inB, EncodeType inType = RGB);
-    Color operator+(Color color) const;
+    Color operator+(const Color color) const;
     Color operator-(const Color color) const;
     Color operator*(const double multiplier) const;
     Color operator/(const double divider) const;

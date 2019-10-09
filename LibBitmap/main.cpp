@@ -1,5 +1,5 @@
 /* Copyright Yonghuan "angrypop" Hu 2019 */
-/* Contanct wanngrypop@gmail.com */
+/* Contact wanngrypop@gmail.com */
 /* NO UNAUTHORIZED REDISTRIBUTION ALLOWED */
 /* Environment:
     Windows SDK     10.0.17763.0

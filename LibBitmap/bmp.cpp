@@ -1,6 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "bmp.h"
-using namespace std;
 
 Color::Color(int inR, int inG, int inB, EncodeType inType) {
     R = inR;
@@ -9,7 +8,7 @@ Color::Color(int inR, int inG, int inB, EncodeType inType) {
     Type = inType;
 }
 
-Color Color::operator+(Color color) const {
+Color Color::operator+(const Color color) const {
     return Color(R + color.R, G + color.G, B + color.B);
 }
 
@@ -51,7 +50,7 @@ bool BMP::Read(std::string FileName) {
     FILE* fp = fopen(FileName.c_str(), "rb");
     if (fp == NULL) {
         /* Error opening target image */
-		cout << "ERROR opening file " << FileName.c_str() << endl;
+		std::cout << "ERROR opening file " << FileName.c_str() << std::endl;
         system("pause");
         return 0;
     }
@@ -68,11 +67,11 @@ bool BMP::Read(std::string FileName) {
     return 1;
 }
 
-bool BMP::Save(string FileName) {
+bool BMP::Save(std::string FileName) {
     FILE* fp = fopen(FileName.c_str(), "wb");
     if (fp == NULL) {
         /* Error saving target image */
-        cout << "ERROR saving file " << FileName.c_str() << endl;
+        std::cout << "ERROR saving file " << FileName.c_str() << std::endl;
 		system("pause");
         return 0;
     }
@@ -88,10 +87,10 @@ bool BMP::Save(string FileName) {
 }
 
 void BMP::PrintInfo() {
-    cout << "Offset         " << FileHeader.bfOffBits << endl;
-    cout << "Width          " << InfoHeader.biWidth << endl;
-    cout << "Height         " << InfoHeader.biHeight << endl;
-    cout << "Bits per pixel " << InfoHeader.biBitCount << endl;
+    std::cout << "Offset         " << FileHeader.bfOffBits << std::endl;
+    std::cout << "Width          " << InfoHeader.biWidth << std::endl;
+	std::cout << "Height         " << InfoHeader.biHeight << std::endl;
+	std::cout << "Bits per pixel " << InfoHeader.biBitCount << std::endl;
 }
 
 Color BMP::GetColor(int x, int y) {
