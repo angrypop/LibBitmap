@@ -5,7 +5,7 @@
 * LibBitmap uses unsafe and outdated I/O functions. USE IT AT YOUR OWN RISK.
 
 ## How to get started?
-Simply copy all the .c and .h files (or all the files in folder /LibBitmap, if you like) to where your program is, and add:
+Simply copy all the .c and .h files (or just open the .sln file using Visual Studio, if you like) to where your program is, and add:
 ```C++
 #include "bmp.h"
 ```
