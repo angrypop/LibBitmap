@@ -46,6 +46,62 @@ Color Color::GetRGB() {
     return Color(_R, _G, _B, RGB);
 }
 
+void BMP::MakeBinary() {
+	MakeGrayscale();
+	int Threshold, N = InfoHeader.biHeight * InfoHeader.biWidth, bestThreshold;
+	double maxvar = 0, var_between, w_foreground, w_background, u_foreground, u_background;
+	for (Threshold = 1; Threshold < 255; Threshold++) {
+		w_foreground = 0; w_background = 0;
+		u_foreground = 0; u_background = 0;
+		for (int y = 0; y < InfoHeader.biHeight; y++)
+			for (int x = 0; x < InfoHeader.biWidth; x++) {
+				if (GetColor(x, y).R < Threshold) {
+					w_foreground++;
+					u_foreground += GetColor(x, y).R;
+				}
+				else {
+					w_background++;
+					u_background += GetColor(x, y).R;
+				}
+			}
+		w_foreground /= N;
+		w_background /= N;
+		u_foreground /= N*w_foreground;
+		u_background /= N*w_background;
+		var_between = w_foreground * w_background*(u_foreground - u_background)*(u_foreground - u_background);
+		if (var_between > maxvar) {
+			maxvar = var_between;
+			bestThreshold = Threshold;
+		}
+	}
+	Threshold = bestThreshold;
+
+	Color white = Color(0, 0, 0), black = Color(255,255,255);
+	for (int y = 0; y < InfoHeader.biHeight; y++)
+		for (int x = 0; x < InfoHeader.biWidth; x++) {
+			if (GetColor(x, y).R < Threshold) SetColor(x, y, white);
+			else SetColor(x, y, black);
+		}
+}
+
+void BMP::MakeGrayscale() {
+	/* Get the maximum and minimum of Y channel (in YUV encoding system) */
+	int Ymax = 0, Ymin = 255;
+	for (int y = 0; y < InfoHeader.biHeight; y++)
+		for (int x = 0; x < InfoHeader.biWidth; x++) {
+			int Y = GetColor(x, y).GetYUV().R;
+			Ymax = max(Y, Ymax);
+			Ymin = min(Y, Ymin);
+		}
+	for (int y = 0; y < InfoHeader.biHeight; y++)
+		for (int x = 0; x < InfoHeader.biWidth; x++) {
+			Color c = GetColor(x, y);
+			c.R = c.G = c.B = 255 * (c.GetYUV().R - Ymin) /
+				(Ymax - Ymin); /* R = G = B = Scaled Y */
+			SetColor(x, y, c);
+		}
+}
+
 bool BMP::Read(std::string FileName) {
     FILE* fp = fopen(FileName.c_str(), "rb");
     if (fp == NULL) {

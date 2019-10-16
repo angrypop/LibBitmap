@@ -25,6 +25,8 @@ class BMP {
     BITMAPFILEHEADER FileHeader;
     BITMAPINFOHEADER InfoHeader;
     int ByteLine; /* Bytes per line, which is multiplication of 4 */
+	void MakeBinary();
+	void MakeGrayscale();
     bool Read(std::string FileName);
     bool Save(std::string FileName);
     void PrintInfo();
