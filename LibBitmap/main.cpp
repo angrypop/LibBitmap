@@ -12,12 +12,19 @@
 using namespace std;
 
 int main() {
-	BMP test;
-	test.Read("../Image/Input2.bmp");
-	test.MakeGrayscale();
-	test.Save("../Image/Gray.bmp");
-	test.MakeBinary();
-	test.Save("../Image/Binary.bmp");
+	BMP orig;
+	orig.Read("../Image/Input1.bmp");
+	orig.MakeBinary();
+	orig.Save("../Image/Binary.bmp");
+	BMP erosion;
+	erosion.Read("../Image/Input1.bmp");
+	erosion.Erode();
+	erosion.Save("../Image/Erosion.bmp");
+	BMP dilation;
+	dilation.Read("../Image/Input1.bmp");
+	dilation.Dilate();
+	dilation.Save("../Image/Dilation.bmp");
+
 	system("pause");
     return 0;
 }

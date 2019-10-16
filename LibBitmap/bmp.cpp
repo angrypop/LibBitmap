@@ -24,6 +24,10 @@ Color Color::operator/(const double divider) const {
     return Color(R / divider, G / divider, B / divider);
 }
 
+bool Color::operator==(const Color color) const {
+	return R == color.R && G == color.G && B == color.B;
+}
+
 Color Color::GetYUV() {
     if (Type == YUV) return *this;
     int Y = 0.299 * R + 0.587 * G + 0.114 * B;
@@ -48,7 +52,7 @@ Color Color::GetRGB() {
 
 void BMP::MakeBinary() {
 	MakeGrayscale();
-	int Threshold, N = InfoHeader.biHeight * InfoHeader.biWidth, bestThreshold;
+	int Threshold, N = InfoHeader.biHeight * InfoHeader.biWidth, bestThreshold = 0;
 	double maxvar = 0, var_between, w_foreground, w_background, u_foreground, u_background;
 	for (Threshold = 1; Threshold < 255; Threshold++) {
 		w_foreground = 0; w_background = 0;
@@ -76,11 +80,11 @@ void BMP::MakeBinary() {
 	}
 	Threshold = bestThreshold;
 
-	Color white = Color(0, 0, 0), black = Color(255,255,255);
+	Color black = Color(0, 0, 0), white = Color(255,255,255);
 	for (int y = 0; y < InfoHeader.biHeight; y++)
 		for (int x = 0; x < InfoHeader.biWidth; x++) {
-			if (GetColor(x, y).R < Threshold) SetColor(x, y, white);
-			else SetColor(x, y, black);
+			if (GetColor(x, y).R < Threshold) SetColor(x, y, black);
+			else SetColor(x, y, white);
 		}
 }
 
@@ -96,10 +100,43 @@ void BMP::MakeGrayscale() {
 	for (int y = 0; y < InfoHeader.biHeight; y++)
 		for (int x = 0; x < InfoHeader.biWidth; x++) {
 			Color c = GetColor(x, y);
-			c.R = c.G = c.B = 255 * (c.GetYUV().R - Ymin) /
+			if (Ymax - Ymin != 0) c.R = c.G = c.B = 255 * (c.GetYUV().R - Ymin) /
 				(Ymax - Ymin); /* R = G = B = Scaled Y */
+			else c.R = c.G = c.B = c.GetYUV().R;/* Pure color security check */
 			SetColor(x, y, c);
 		}
+}
+
+void BMP::Erode() {
+	MakeBinary();
+	Color  black = Color(0, 0, 0), white = Color(255, 255, 255);
+	std::vector<std::pair<int, int>> DeleteList;
+	for (int y = 0; y < InfoHeader.biHeight; y++)
+		for (int x = 0; x < InfoHeader.biWidth; x++) {
+			if (GetColor(x, y) == white) {
+				if (!(GetColor(x - 1, y) == white && GetColor(x + 1, y) == white &&
+					GetColor(x, y - 1) == white && GetColor(x, y + 1) == white)) DeleteList.push_back(std::make_pair(x, y));
+			}
+		}
+	for (std::vector<std::pair<int, int>>::iterator it = DeleteList.begin(); it != DeleteList.end(); it++) {
+		SetColor(it->first, it->second, black);
+	}
+}
+
+void BMP::Dilate() {
+	MakeBinary();
+	Color  black = Color(0, 0, 0), white = Color(255, 255, 255);
+	std::vector<std::pair<int, int>> AddList;
+	for (int y = 0; y < InfoHeader.biHeight; y++)
+		for (int x = 0; x < InfoHeader.biWidth; x++) {
+			if (GetColor(x, y) == black) {
+				if (GetColor(x - 1, y) == white || GetColor(x + 1, y) == white ||
+					GetColor(x, y - 1) == white || GetColor(x, y + 1) == white) AddList.push_back(std::make_pair(x, y));
+			}
+		}
+	for (std::vector<std::pair<int, int>>::iterator it = AddList.begin(); it != AddList.end(); it++) {
+		SetColor(it->first, it->second, white);
+	}
 }
 
 bool BMP::Read(std::string FileName) {
@@ -124,6 +161,7 @@ bool BMP::Read(std::string FileName) {
 }
 
 bool BMP::Save(std::string FileName) {
+	if (InfoHeader.biSizeImage <= 0) return 0;
     FILE* fp = fopen(FileName.c_str(), "wb");
     if (fp == NULL) {
         /* Error saving target image */
@@ -150,6 +188,7 @@ void BMP::PrintInfo() {
 }
 
 Color BMP::GetColor(int x, int y) {
+	if (y<0 || x<0 || y>=InfoHeader.biHeight || x>=InfoHeader.biWidth) return Color(0, 0, 0);
     return Color(*(PixelData + y * ByteLine + 3 * x + 2),
                  *(PixelData + y * ByteLine + 3 * x + 1),
                  *(PixelData + y * ByteLine + 3 * x + 0));

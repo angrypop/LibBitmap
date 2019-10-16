@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <iostream>
 #include <cmath>
+#include <vector>
 #include <stdlib.h>
 class Color {
    public:
@@ -12,6 +13,7 @@ class Color {
     Color operator-(const Color color) const;
     Color operator*(const double multiplier) const;
     Color operator/(const double divider) const;
+	bool operator==(const Color color) const;
     Color GetYUV();
     Color GetRGB();
 };
@@ -27,6 +29,8 @@ class BMP {
     int ByteLine; /* Bytes per line, which is multiplication of 4 */
 	void MakeBinary();
 	void MakeGrayscale();
+	void Erode();
+	void Dilate();
     bool Read(std::string FileName);
     bool Save(std::string FileName);
     void PrintInfo();
