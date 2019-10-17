@@ -24,6 +24,7 @@ class BMP {
                      /* In the order of G[0][0] B[0][0] R[0][0] G[0][1]...*/
                      /* Memory space will be assigned in read() */
    public:
+	enum ImgType {Original, Grayscale, Binary} Type;
     BITMAPFILEHEADER FileHeader;
     BITMAPINFOHEADER InfoHeader;
     int ByteLine; /* Bytes per line, which is multiplication of 4 */

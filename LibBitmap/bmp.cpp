@@ -51,7 +51,8 @@ Color Color::GetRGB() {
 }
 
 void BMP::MakeBinary() {
-	MakeGrayscale();
+	if(Type!=Grayscale) MakeGrayscale();
+	Type = Binary;
 	int Threshold, N = InfoHeader.biHeight * InfoHeader.biWidth, bestThreshold = 0;
 	double maxvar = 0, var_between, w_foreground, w_background, u_foreground, u_background;
 	for (Threshold = 1; Threshold < 255; Threshold++) {
@@ -89,6 +90,7 @@ void BMP::MakeBinary() {
 }
 
 void BMP::MakeGrayscale() {
+	Type = Grayscale;
 	/* Get the maximum and minimum of Y channel (in YUV encoding system) */
 	int Ymax = 0, Ymin = 255;
 	for (int y = 0; y < InfoHeader.biHeight; y++)
@@ -108,7 +110,7 @@ void BMP::MakeGrayscale() {
 }
 
 void BMP::Erode() {
-	MakeBinary();
+	if(Type!=Binary) MakeBinary();
 	Color  black = Color(0, 0, 0), white = Color(255, 255, 255);
 	std::vector<std::pair<int, int>> DeleteList;
 	for (int y = 0; y < InfoHeader.biHeight; y++)
@@ -124,7 +126,7 @@ void BMP::Erode() {
 }
 
 void BMP::Dilate() {
-	MakeBinary();
+	if (Type != Binary) MakeBinary();
 	Color  black = Color(0, 0, 0), white = Color(255, 255, 255);
 	std::vector<std::pair<int, int>> AddList;
 	for (int y = 0; y < InfoHeader.biHeight; y++)
@@ -140,6 +142,7 @@ void BMP::Dilate() {
 }
 
 bool BMP::Read(std::string FileName) {
+	Type = Original;
     FILE* fp = fopen(FileName.c_str(), "rb");
     if (fp == NULL) {
         /* Error opening target image */

@@ -12,19 +12,29 @@
 using namespace std;
 
 int main() {
+	std::string InputPath = "../Image/Input2.bmp";
 	BMP orig;
-	orig.Read("../Image/Input1.bmp");
+	orig.Read(InputPath);
 	orig.MakeBinary();
 	orig.Save("../Image/Binary.bmp");
 	BMP erosion;
-	erosion.Read("../Image/Input1.bmp");
+	erosion.Read(InputPath);
 	erosion.Erode();
 	erosion.Save("../Image/Erosion.bmp");
 	BMP dilation;
-	dilation.Read("../Image/Input1.bmp");
+	dilation.Read(InputPath);
 	dilation.Dilate();
 	dilation.Save("../Image/Dilation.bmp");
-
+	BMP opening;
+	opening.Read(InputPath);
+	opening.Erode();
+	opening.Dilate();
+	opening.Save("../Image/Opening.bmp");
+	BMP closing;
+	closing.Read(InputPath);
+	closing.Dilate();
+	closing.Erode();
+	closing.Save("../Image/Closing.bmp");
 	system("pause");
     return 0;
 }
