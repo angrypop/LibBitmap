@@ -53,7 +53,8 @@ Color Color::GetRGB() {
 void BMP::MakeBinary() {
 	/* Otsu Binarization */
 	/* Optimized from O(256*N) to O(N) */
-	if(Type!=Grayscale) MakeGrayscale();
+	if (Type == Binary) return;
+	if (Type != Grayscale) MakeGrayscale();
 	Type = Binary;
 	int Threshold, N = InfoHeader.biHeight * InfoHeader.biWidth, bestThreshold = 0;
 	double maxvar = 0, var_between, n_foreground = 0, n_background = N, sumY_foreground = 0, sumY_background = 0;
@@ -104,7 +105,7 @@ void BMP::MakeBinary() {
 			bestThreshold = Threshold;
 		}
 	}*/
-
+	std::cout << "Best threshold: " << bestThreshold << std::endl;
 	Color black = Color(0, 0, 0), white = Color(255,255,255);
 	for (int y = 0; y < InfoHeader.biHeight; y++)
 		for (int x = 0; x < InfoHeader.biWidth; x++) {
@@ -133,35 +134,55 @@ void BMP::MakeGrayscale() {
 		}
 }
 
-void BMP::Erode() {
-	if(Type!=Binary) MakeBinary();
-	Color  black = Color(0, 0, 0), white = Color(255, 255, 255);
-	std::vector<std::pair<int, int>> DeleteList;
-	for (int y = 0; y < InfoHeader.biHeight; y++)
-		for (int x = 0; x < InfoHeader.biWidth; x++) {
-			if (GetColor(x, y) == white) {
-				if (!(GetColor(x - 1, y) == white && GetColor(x + 1, y) == white &&
-					GetColor(x, y - 1) == white && GetColor(x, y + 1) == white)) DeleteList.push_back(std::make_pair(x, y));
-			}
-		}
-	for (std::vector<std::pair<int, int>>::iterator it = DeleteList.begin(); it != DeleteList.end(); it++) {
-		SetColor(it->first, it->second, black);
-	}
-}
-
-void BMP::Dilate() {
+void BMP::Erode(int size) {
 	if (Type != Binary) MakeBinary();
 	Color  black = Color(0, 0, 0), white = Color(255, 255, 255);
-	std::vector<std::pair<int, int>> AddList;
+	std::vector<std::pair<int, int>> ErodeList;
 	for (int y = 0; y < InfoHeader.biHeight; y++)
 		for (int x = 0; x < InfoHeader.biWidth; x++) {
 			if (GetColor(x, y) == black) {
-				if (GetColor(x - 1, y) == white || GetColor(x + 1, y) == white ||
-					GetColor(x, y - 1) == white || GetColor(x, y + 1) == white) AddList.push_back(std::make_pair(x, y));
+				bool added = false;
+				for (int ty = y - size; ty <= y + size; ty++) {
+					for (int tx = x - size; tx <= x + size; tx++) {
+						if (ty < 0 || ty >= InfoHeader.biHeight || tx < 0 || tx >= InfoHeader.biWidth) continue;
+						if (GetColor(tx, ty) == white) {
+							ErodeList.push_back(std::make_pair(x, y));
+							added = true;
+							break;
+						}
+					}
+					if (added) break;
+				}
 			}
 		}
-	for (std::vector<std::pair<int, int>>::iterator it = AddList.begin(); it != AddList.end(); it++) {
+	for (std::vector<std::pair<int, int>>::iterator it = ErodeList.begin(); it != ErodeList.end(); it++) {
 		SetColor(it->first, it->second, white);
+	}
+}
+
+void BMP::Dilate(int size) {
+	if (Type != Binary) MakeBinary();
+	Color  black = Color(0, 0, 0), white = Color(255, 255, 255);
+	std::vector<std::pair<int, int>> DilateList;
+	for (int y = 0; y < InfoHeader.biHeight; y++)
+		for (int x = 0; x < InfoHeader.biWidth; x++) {
+			if (GetColor(x, y) == white) {
+				bool deleted = false;
+				for (int ty = y - size; ty <= y + size; ty++) {
+					for (int tx = x - size; tx <= x + size; tx++) {
+						if (ty < 0 || ty >= InfoHeader.biHeight || tx < 0 || tx >= InfoHeader.biWidth) continue;
+						if (GetColor(tx, ty) == black) {
+							DilateList.push_back(std::make_pair(x, y));
+							deleted = true;
+							break;
+						}
+					}
+					if (deleted) break;
+				}
+			}
+		}
+	for (std::vector<std::pair<int, int>>::iterator it = DilateList.begin(); it != DilateList.end(); it++) {
+		SetColor(it->first, it->second, black);
 	}
 }
 
@@ -188,7 +209,7 @@ bool BMP::Read(std::string FileName) {
 }
 
 bool BMP::Save(std::string FileName) {
-	if (InfoHeader.biSizeImage <= 0) return 0;
+	//if (InfoHeader.biSizeImage <= 0) return 0;
     FILE* fp = fopen(FileName.c_str(), "wb");
     if (fp == NULL) {
         /* Error saving target image */
@@ -212,10 +233,16 @@ void BMP::PrintInfo() {
     std::cout << "Width          " << InfoHeader.biWidth << std::endl;
 	std::cout << "Height         " << InfoHeader.biHeight << std::endl;
 	std::cout << "Bits per pixel " << InfoHeader.biBitCount << std::endl;
+	std::cout << "Bytes per line " << ByteLine << std::endl;
+	std::cout << "Size           " << InfoHeader.biSize << std::endl;
+	std::cout << "SizeImg        " << InfoHeader.biSizeImage << std::endl;
 }
 
 Color BMP::GetColor(int x, int y) {
-	if (y<0 || x<0 || y>=InfoHeader.biHeight || x>=InfoHeader.biWidth) return Color(0, 0, 0);
+	if (y < 0 || x < 0 || y >= InfoHeader.biHeight || x >= InfoHeader.biWidth) {
+		std::cout << "WARNING invalid color query" << std::endl;
+		return Color(0, 0, 0);
+	}
     return Color(*(PixelData + y * ByteLine + 3 * x + 2),
                  *(PixelData + y * ByteLine + 3 * x + 1),
                  *(PixelData + y * ByteLine + 3 * x + 0));

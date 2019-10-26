@@ -30,8 +30,8 @@ class BMP {
     int ByteLine; /* Bytes per line, which is multiplication of 4 */
 	void MakeBinary();
 	void MakeGrayscale();
-	void Erode();
-	void Dilate();
+	void Erode(int size = 1);
+	void Dilate(int size = 1);
     bool Read(std::string FileName);
     bool Save(std::string FileName);
     void PrintInfo();
