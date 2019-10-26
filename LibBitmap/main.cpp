@@ -12,7 +12,11 @@
 using namespace std;
 
 int main() {
-	std::string InputPath = "../Image/Input2.bmp";
+	std::string InputPath = "../Image/Input1.bmp";
+	BMP gray;
+	gray.Read(InputPath);
+	gray.MakeGrayscale();
+	gray.Save("../Image/Gray.bmp");
 	BMP orig;
 	orig.Read(InputPath);
 	orig.MakeBinary();

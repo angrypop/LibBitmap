@@ -51,10 +51,35 @@ Color Color::GetRGB() {
 }
 
 void BMP::MakeBinary() {
+	/* Otsu Binarization */
+	/* Optimized from O(256*N) to O(N) */
 	if(Type!=Grayscale) MakeGrayscale();
 	Type = Binary;
 	int Threshold, N = InfoHeader.biHeight * InfoHeader.biWidth, bestThreshold = 0;
-	double maxvar = 0, var_between, w_foreground, w_background, u_foreground, u_background;
+	double maxvar = 0, var_between, n_foreground = 0, n_background = N, sumY_foreground = 0, sumY_background = 0;
+	int cnt[256];/*cnt[n]: number of pixels of Y value n*/
+	memset(cnt, 0, sizeof(cnt));
+	for (int y = 0; y < InfoHeader.biHeight; y++)
+		for (int x = 0; x < InfoHeader.biWidth; x++) {
+			cnt[GetColor(x, y).R]++;
+			sumY_background += GetColor(x, y).R;
+		}
+
+	for (Threshold = 1; Threshold < 255; Threshold++) {
+		n_foreground += cnt[Threshold];
+		n_background -= cnt[Threshold];
+		sumY_foreground += cnt[Threshold] * Threshold;
+		sumY_background -= cnt[Threshold] * Threshold;
+		var_between = n_foreground / N * n_background / N * (sumY_foreground / n_foreground - sumY_background / n_background)*(sumY_foreground / n_foreground - sumY_background / n_background);
+		if (var_between > maxvar) {
+			maxvar = var_between;
+			bestThreshold = Threshold;
+		}
+	}
+	Threshold = bestThreshold;
+	/*
+	------------ THE UNOPTIMIZED VERSION ------------
+	double w_foreground, w_background, u_foreground, u_background;
 	for (Threshold = 1; Threshold < 255; Threshold++) {
 		w_foreground = 0; w_background = 0;
 		u_foreground = 0; u_background = 0;
@@ -78,8 +103,7 @@ void BMP::MakeBinary() {
 			maxvar = var_between;
 			bestThreshold = Threshold;
 		}
-	}
-	Threshold = bestThreshold;
+	}*/
 
 	Color black = Color(0, 0, 0), white = Color(255,255,255);
 	for (int y = 0; y < InfoHeader.biHeight; y++)
