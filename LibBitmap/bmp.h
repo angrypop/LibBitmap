@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 #include <stdlib.h>
+#include <cstdio>
 class Color {
    public:
     enum EncodeType { RGB, YUV } Type;
@@ -16,6 +17,8 @@ class Color {
 	bool operator==(const Color color) const;
     Color GetYUV();
     Color GetRGB();
+	double GetLuminance();
+	void SetLuminance(int inL);
 };
 
 class BMP {
@@ -24,7 +27,7 @@ class BMP {
                      /* In the order of G[0][0] B[0][0] R[0][0] G[0][1]...*/
                      /* Memory space will be assigned in read() */
    public:
-	enum ImgType {Original, Grayscale, Binary} Type;
+	enum ImgType {Colored, Grayscale, Binary} Type;
     BITMAPFILEHEADER FileHeader;
     BITMAPINFOHEADER InfoHeader;
     int ByteLine; /* Bytes per line, which is multiplication of 4 */
@@ -32,6 +35,9 @@ class BMP {
 	void MakeGrayscale();
 	void Erode(int size = 1);
 	void Dilate(int size = 1);
+	void Enhance();
+	void HistEqualize();
+	void HistPrintCSV(std::string FileName);
     bool Read(std::string FileName);
     bool Save(std::string FileName);
     void PrintInfo();
@@ -43,5 +49,6 @@ class BMP {
 			for (int x = 0; x < InfoHeader.biWidth; x++) 
 				action(x, y);
 	}
+	BMP();
     ~BMP();
 };
