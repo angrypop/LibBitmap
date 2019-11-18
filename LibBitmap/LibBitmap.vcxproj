@@ -116,11 +116,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bmp_asst.cpp" />
+    <ClCompile Include="bmp_io.cpp" />
+    <ClCompile Include="color.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="bmp.cpp" />
+    <ClCompile Include="bmp_trans.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bmp.h" />
+    <ClInclude Include="color.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -5,21 +5,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <cstdio>
-class Color {
-   public:
-    enum EncodeType { RGB, YUV } Type;
-    int R, G, B;
-    Color(int inR, int inG, int inB, EncodeType inType = RGB);
-    Color operator+(const Color color) const;
-    Color operator-(const Color color) const;
-    Color operator*(const double multiplier) const;
-    Color operator/(const double divider) const;
-	bool operator==(const Color color) const;
-    Color GetYUV();
-    Color GetRGB();
-	double GetLuminance();
-	void SetLuminance(int inL);
-};
+#include "color.h"
 
 class BMP {
    private:
@@ -28,20 +14,41 @@ class BMP {
                      /* Memory space will be assigned in read() */
    public:
 	enum ImgType {Colored, Grayscale, Binary} Type;
+	enum Direction { Horizontal, Vertical };
     BITMAPFILEHEADER FileHeader;
     BITMAPINFOHEADER InfoHeader;
     int ByteLine; /* Bytes per line, which is multiplication of 4 */
-	void MakeBinary();
-	void MakeGrayscale();
-	void Erode(int size = 1);
+
+	/* --Transformations-- */
+	/* bmp_trans.cpp */
 	void Dilate(int size = 1);
 	void Enhance();
+	void Erode(int size = 1);
 	void HistEqualize();
-	void HistPrintCSV(std::string FileName);
+	void MakeBinary();
+	void MakeGrayscale();
+	void Mirror(Direction MirrorDir = Horizontal);
+	void Rotate(int degree);
+	void Scale(double factorx, double factory);
+	void Shear(double factor, Direction ShearDir = Horizontal);
+	void Translate(int dx, int dy);
+	void LinearTransform(int newW, int newH, double F[][3], std::string cmd = "empty");
+
+	/* --I/O Functions--*/
+	/* bmp_io.cpp */
     bool Read(std::string FileName);
     bool Save(std::string FileName);
-    void PrintInfo();
-    Color GetColor(int x, int y);
+	void HistPrintCSV(std::string FileName);
+
+
+	/* --Asst Functions-- */
+	/* bmp_asst.cpp */
+	void PrintInfo();
+	void ResizeFrame(int newW, int newH, std::string cmd = "stay");
+	Color GetColor(int x, int y);
+	static Color GetColor(int x, int y, BYTE* buf, int bpl, int W, int H);
+	/*	Generalized version of GetColor(). 
+		Allows read from buffer buf instead of PixelDate. */
     void SetColor(int x, int y, Color color);
 	template <typename Action>
 	void ForAllPixels(Action const& action) {
