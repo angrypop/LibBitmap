@@ -120,6 +120,7 @@
     <ClCompile Include="bmp_io.cpp" />
     <ClCompile Include="color.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="main_lineartransform.cpp" />
     <ClCompile Include="bmp_trans.cpp" />
   </ItemGroup>
   <ItemGroup>

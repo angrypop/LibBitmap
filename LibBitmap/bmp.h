@@ -3,7 +3,8 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include <stdlib.h>
+#include <algorithm>
+#include <cstdlib>
 #include <cstdio>
 #include "color.h"
 
@@ -24,6 +25,8 @@ class BMP {
 	void Dilate(int size = 1);
 	void Enhance();
 	void Erode(int size = 1);
+	void Filter(double F[3][3], double denominator = 0);
+	void Filter(std::string cmd);
 	void HistEqualize();
 	void MakeBinary();
 	void MakeGrayscale();

@@ -1,5 +1,10 @@
 #include "color.h"
 
+Color::Color() {
+	Type = RGB;
+	R = 0; G = 0; B = 0;
+}
+
 Color::Color(int inR, int inG, int inB, EncodeType inType) {
 	R = inR;
 	G = inG;
@@ -8,22 +13,25 @@ Color::Color(int inR, int inG, int inB, EncodeType inType) {
 }
 
 Color Color::operator+(const Color color) const {
-	return Color(R + color.R, G + color.G, B + color.B);
+	if (Type != color.Type) std::cout << "WARNING Adding colors of different color spaces." << std::endl;
+	return Color(R + color.R, G + color.G, B + color.B, Type);
 }
 
 Color Color::operator-(const Color color) const {
-	return Color(R - color.R, G - color.G, B - color.B);
+	if (Type != color.Type) std::cout << "WARNING Adding colors of different color spaces." << std::endl;
+	return Color(R - color.R, G - color.G, B - color.B, Type);
 }
 
 Color Color::operator*(const double multiplier) const {
-	return Color(R * multiplier, G * multiplier, B * multiplier);
+	return Color(R * multiplier, G * multiplier, B * multiplier, Type);
 }
 
 Color Color::operator/(const double divider) const {
-	return Color(R / divider, G / divider, B / divider);
+	return Color(R / divider, G / divider, B / divider, Type);
 }
 
 bool Color::operator==(const Color color) const {
+	if (Type != color.Type) std::cout << "WARNING Comparing colors of different color spaces." << std::endl;
 	return R == color.R && G == color.G && B == color.B;
 }
 
@@ -54,6 +62,9 @@ double Color::GetLuminance() {
 }
 
 void Color::SetLuminance(int inL) {
+	if (inL > 255) inL = 255;
+	if (inL < 0)
+		inL = 0;
 	if (Type == RGB) {
 		Color c = GetYUV();
 		c.R = inL;
@@ -63,4 +74,8 @@ void Color::SetLuminance(int inL) {
 	else if (Type == YUV) {
 		R = inL;
 	}
+}
+
+void Color::Print() {
+	printf("(%d %d %d) [%s]\n", R, G, B, Type == RGB ? "RGB" : "YUV");
 }

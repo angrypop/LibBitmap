@@ -67,6 +67,90 @@ void BMP::Erode(int size) {
 	}
 }
 
+void BMP::Filter(double F[3][3], double denominator) {
+	/*
+		Note that the filter array is
+			00 01 02 y
+			10 11 12
+			20 21 22
+			x
+		while the coordinate we use is
+			y
+			20 21 22
+			10 11 12
+			00 01 02 x
+		Rule: Assure the filter array LOOKS as you expect when initializing
+	*/
+
+	const int W = InfoHeader.biWidth, H = InfoHeader.biHeight;
+	BYTE* buf = new BYTE[H * ByteLine];
+	for (int i = 0; i < H * ByteLine; i++) buf[i] = PixelData[i];
+	for (int y = 0; y < H; y++)
+		for (int x = 0; x < W; x++) {
+			double sum_w = 0, l = 0;
+			for (int dy = -1; dy <= 1; dy++)
+				for (int dx = -1; dx <= 1; dx++) {
+					l += GetColor(x + dx, y + dy, buf, ByteLine, W, H).GetLuminance() * F[-dy + 1][dx + 1];
+					sum_w += F[-dy + 1][dx + 1];
+				}
+			if (denominator != 0) l /= denominator;
+			else l /= sum_w;
+			Color c = GetColor(x, y, buf, ByteLine, W, H);
+			c.SetLuminance(l);
+			//if (l < 0) l = 0; if (l > 255) l = 255;
+			//if(x==200) 	printf("(%d %d) l:%d c.lum:%d\n", x, y, (int)l,(int)c.GetLuminance());
+			SetColor(x, y, c);
+		}
+	free(buf);
+}
+
+void BMP::Filter(std::string cmd) {
+	/* commands supported:
+		-extend (for laplacian filtering only)
+		-fuse (for laplacian filtering only)
+		-gray
+		-binary
+	*/
+	if (cmd.find("mean") != -1) {
+		double F[3][3] = { {1,1,1},{1,1,1},{1,1,1} };
+		Filter(F);
+	}
+	else if (cmd.find("median") != -1) {
+		const int W = InfoHeader.biWidth, H = InfoHeader.biHeight;
+		BYTE* buf = new BYTE[H * ByteLine];
+		for (int i = 0; i < H * ByteLine; i++) buf[i] = PixelData[i];
+		for (int y = 0; y < H; y++)
+			for (int x = 0; x < W; x++) {
+				Color c = GetColor(x, y, buf, ByteLine, W, H);
+				std::vector<double> L;
+				for (int dy = -1; dy <= 1; dy++)
+					for (int dx = -1; dx <= 1; dx++) {
+						L.push_back(GetColor(x + dx, y + dy, buf, ByteLine, W, H).GetLuminance());
+					}
+				std::sort(L.begin(), L.end());
+				c.SetLuminance(L[3 * 3 / 2]);
+				SetColor(x, y, c);
+			}
+		free(buf);
+	}
+	else if (cmd.find("laplacian") != -1) {
+		double F[3][3] = { {0,-1,0},{-1,4,-1},{0,-1,0} };
+		if (cmd.find("extend") != -1) {
+			for (int x = 0; x < 3; x++)
+				for (int y = 0; y < 3; y++)
+					F[x][y] = -1;
+			F[1][1] = 8;
+		}
+		if(cmd.find("fuse") != -1) F[1][1] += 1;
+		Filter(F, 1);
+	}
+	else {
+		std::cout << "ERROR Unresolved command @ Filter()" << std::endl;
+	}
+	if (cmd.find("gray") != -1) MakeGrayscale();
+	if (cmd.find("binary") != -1) MakeBinary();
+}
+
 void BMP::HistEqualize() {
 	int n[256], cumulative_n[256], n_after[256], setto[256], N = InfoHeader.biHeight*InfoHeader.biWidth;
 	memset(n, 0, sizeof(n));
@@ -96,22 +180,23 @@ void BMP::MakeBinary() {
 	if (Type == Binary) return;
 	if (Type != Grayscale) MakeGrayscale();
 	Type = Binary;
-	int Threshold, N = InfoHeader.biHeight * InfoHeader.biWidth, bestThreshold = 0;
+	int Threshold, N = InfoHeader.biHeight * InfoHeader.biWidth, bestThreshold = 127;
 	double maxvar = 0, var_between, n_foreground = N, n_background = 0, sumY_foreground = 0, sumY_background = 0;
 	int cnt[256];/*cnt[n]: number of pixels of Y value n*/
 	memset(cnt, 0, sizeof(cnt));
 	for (int y = 0; y < InfoHeader.biHeight; y++)
 		for (int x = 0; x < InfoHeader.biWidth; x++) {
 			cnt[GetColor(x, y).R]++;
-			sumY_background += GetColor(x, y).R;
+			sumY_foreground += GetColor(x, y).R;
 		}
-
+	/* foreground: white (l > threshold) */
 	for (Threshold = 0; Threshold < 255; Threshold++) {
 		n_foreground -= cnt[Threshold];
 		n_background += cnt[Threshold];
-		sumY_foreground += cnt[Threshold] * Threshold;
-		sumY_background -= cnt[Threshold] * Threshold;
+		sumY_foreground -= cnt[Threshold] * Threshold;
+		sumY_background += cnt[Threshold] * Threshold;
 		var_between = n_foreground / N * n_background / N * (sumY_foreground / n_foreground - sumY_background / n_background)*(sumY_foreground / n_foreground - sumY_background / n_background);
+		//printf("[%d] cnt:%d n_f:%d n_b:%d sumY_f:%d sumY_b:%d var:%lf\n", Threshold, cnt[Threshold], (int)n_foreground, (int)n_background, (int)sumY_foreground, (int)sumY_background, var_between);
 		if (var_between >= maxvar) {
 			maxvar = var_between;
 			bestThreshold = Threshold;
@@ -145,7 +230,7 @@ void BMP::MakeBinary() {
 			bestThreshold = Threshold;
 		}
 	}*/
-	std::cout << "Best threshold: " << bestThreshold << std::endl;
+	std::cout << "       @MakeBinary() Best threshold: " << bestThreshold << std::endl;
 	Color black = Color(0, 0, 0), white = Color(255,255,255);
 	for (int y = 0; y < InfoHeader.biHeight; y++)
 		for (int x = 0; x < InfoHeader.biWidth; x++) {
@@ -160,7 +245,7 @@ void BMP::MakeGrayscale() {
 	int Ymax = 0, Ymin = 255;
 	for (int y = 0; y < InfoHeader.biHeight; y++)
 		for (int x = 0; x < InfoHeader.biWidth; x++) {
-			int Y = GetColor(x, y).GetYUV().R;
+			int Y = GetColor(x, y).GetLuminance();
 			Ymax = max(Y, Ymax);
 			Ymin = min(Y, Ymin);
 		}
