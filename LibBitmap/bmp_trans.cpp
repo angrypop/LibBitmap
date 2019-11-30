@@ -67,7 +67,7 @@ void BMP::Erode(int size) {
 	}
 }
 
-void BMP::Filter(double F[3][3], double denominator) {
+void BMP::Filter(double *F, int size) {
 	/*
 		Note that the filter array is
 			00 01 02 y
@@ -81,30 +81,32 @@ void BMP::Filter(double F[3][3], double denominator) {
 			00 01 02 x
 		Rule: Assure the filter array LOOKS as you expect when initializing
 	*/
-
+	if (size % 2 != 1) {
+		printf("ERROR  @Filter() Size of kernel is even");
+		return;
+	}
 	const int W = InfoHeader.biWidth, H = InfoHeader.biHeight;
 	BYTE* buf = new BYTE[H * ByteLine];
 	for (int i = 0; i < H * ByteLine; i++) buf[i] = PixelData[i];
 	for (int y = 0; y < H; y++)
 		for (int x = 0; x < W; x++) {
 			double sum_w = 0, l = 0;
-			for (int dy = -1; dy <= 1; dy++)
-				for (int dx = -1; dx <= 1; dx++) {
-					l += GetColor(x + dx, y + dy, buf, ByteLine, W, H).GetLuminance() * F[-dy + 1][dx + 1];
-					sum_w += F[-dy + 1][dx + 1];
+			for (int dy = -(size / 2); dy <= size / 2; dy++)
+				for (int dx = -(size / 2); dx <= size / 2; dx++) {
+					double w = *(F + (size / 2 - dy) * size + size / 2 + dx);
+					//w = F[size/2-dy][size/2+dx]
+					l += GetColor(x + dx, y + dy, buf, ByteLine, W, H).GetLuminance() * w;
+					sum_w += w;
 				}
-			if (denominator != 0) l /= denominator;
-			else l /= sum_w;
+			if(sum_w != 0) l /= sum_w;
 			Color c = GetColor(x, y, buf, ByteLine, W, H);
 			c.SetLuminance(l);
-			//if (l < 0) l = 0; if (l > 255) l = 255;
-			//if(x==200) 	printf("(%d %d) l:%d c.lum:%d\n", x, y, (int)l,(int)c.GetLuminance());
 			SetColor(x, y, c);
 		}
 	free(buf);
 }
 
-void BMP::Filter(std::string cmd) {
+void BMP::Filter(std::string cmd, int size) {
 	/* commands supported:
 		-extend (for laplacian filtering only)
 		-fuse (for laplacian filtering only)
@@ -112,8 +114,11 @@ void BMP::Filter(std::string cmd) {
 		-binary
 	*/
 	if (cmd.find("mean") != -1) {
-		double F[3][3] = { {1,1,1},{1,1,1},{1,1,1} };
-		Filter(F);
+		double *F = new double[size * size];
+		for (int x = 0; x < size; x++)
+			for (int y = 0; y < size; y++)
+				*(F + y * size + x) = 1;
+		Filter((double*)F, size);
 	}
 	else if (cmd.find("median") != -1) {
 		const int W = InfoHeader.biWidth, H = InfoHeader.biHeight;
@@ -123,12 +128,12 @@ void BMP::Filter(std::string cmd) {
 			for (int x = 0; x < W; x++) {
 				Color c = GetColor(x, y, buf, ByteLine, W, H);
 				std::vector<double> L;
-				for (int dy = -1; dy <= 1; dy++)
-					for (int dx = -1; dx <= 1; dx++) {
+				for (int dy = - size / 2; dy <= size / 2; dy++)
+					for (int dx = - size / 2; dx <= size / 2; dx++) {
 						L.push_back(GetColor(x + dx, y + dy, buf, ByteLine, W, H).GetLuminance());
 					}
 				std::sort(L.begin(), L.end());
-				c.SetLuminance(L[3 * 3 / 2]);
+				c.SetLuminance(L[size * size / 2]);
 				SetColor(x, y, c);
 			}
 		free(buf);
@@ -142,7 +147,7 @@ void BMP::Filter(std::string cmd) {
 			F[1][1] = 8;
 		}
 		if(cmd.find("fuse") != -1) F[1][1] += 1;
-		Filter(F, 1);
+		Filter((double*)F, 3);
 	}
 	else {
 		std::cout << "ERROR Unresolved command @ Filter()" << std::endl;

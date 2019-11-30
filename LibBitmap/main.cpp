@@ -14,20 +14,29 @@ using namespace std;
 int main() {
 	std::string inpath[10] = { "RESERVED", "../Image/Input1", "../Image/Input2", "../Image/Input3", "../Image/Input4", "../Image/Input5", "../Image/Input6" };
 	
-	BMP filtering[7];
-	std::string cmd[7] = { "",
+	std::string cmd[10] = { "",
 		"mean",
 		"median",
-		"laplacian -binary",
+		"laplacian ",
 		"laplacian -fuse",
-		"laplacian -extend -binary",
+		"laplacian -binary",
 		"laplacian -extend -fuse" };
 	for (int i = 1; i <= 6; i++) {
-		filtering[i].Read(inpath[1] + ".bmp");
-		filtering[i].Filter(cmd[i]);
-		filtering[i].Save(inpath[1] + "_" + cmd[i] + "_.bmp");
+		BMP filtering;
+		filtering.Read(inpath[1] + ".bmp");
+		filtering.Filter(cmd[i]);
+		filtering.Save(inpath[1] + "_" + cmd[i] + "_.bmp");
 	}
-
+	for (int i = 1; i <= 2; i++) {
+		BMP filtering;
+		filtering.Read(inpath[1] + ".bmp");
+		filtering.Filter(cmd[i], 11);
+		filtering.Save(inpath[1] + "_" + cmd[i] + "_size5_.bmp");
+	}
+	BMP filtering;
+	filtering.Read(inpath[4] + ".bmp");
+	filtering.Filter(cmd[2], 11);
+	filtering.Save(inpath[4] + "_" + cmd[2] + "_size7_.bmp");
 	system("pause");
 	return 0;
 }

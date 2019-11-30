@@ -25,8 +25,8 @@ class BMP {
 	void Dilate(int size = 1);
 	void Enhance();
 	void Erode(int size = 1);
-	void Filter(double F[3][3], double denominator = 0);
-	void Filter(std::string cmd);
+	void Filter(double *F, int size);
+	void Filter(std::string cmd, int size = 3);
 	void HistEqualize();
 	void MakeBinary();
 	void MakeGrayscale();
