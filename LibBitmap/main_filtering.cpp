@@ -33,10 +33,6 @@ int main() {
 		filtering.Filter(cmd[i], 11);
 		filtering.Save(inpath[1] + "_" + cmd[i] + "_size5_.bmp");
 	}
-	BMP filtering;
-	filtering.Read(inpath[4] + ".bmp");
-	filtering.Filter(cmd[2], 11);
-	filtering.Save(inpath[4] + "_" + cmd[2] + "_size7_.bmp");
 	system("pause");
 	return 0;
 }

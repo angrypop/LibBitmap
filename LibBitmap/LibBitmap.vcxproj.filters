@@ -30,7 +30,7 @@
     <ClCompile Include="main_lineartransform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="main_filtering.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
