@@ -26,7 +26,7 @@ class BMP {
 	void Enhance();
 	void Erode(int size = 1);
 	void Filter(double *F, int size);
-	void Filter(std::string cmd, int size = 3);
+	void Filter(std::string cmd, int size = 3, double sigma_r = 1);
 	void HistEqualize();
 	void MakeBinary();
 	void MakeGrayscale();

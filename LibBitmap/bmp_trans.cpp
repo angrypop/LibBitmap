@@ -106,7 +106,7 @@ void BMP::Filter(double *F, int size) {
 	free(buf);
 }
 
-void BMP::Filter(std::string cmd, int size) {
+void BMP::Filter(std::string cmd, int size, double sigma_r) {
 	/* commands supported:
 		-extend (for laplacian filtering only)
 		-fuse (for laplacian filtering only)
@@ -148,6 +148,32 @@ void BMP::Filter(std::string cmd, int size) {
 		}
 		if(cmd.find("fuse") != -1) F[1][1] += 1;
 		Filter((double*)F, 3);
+	}
+	else if (cmd.find("bilateral") != -1) {
+		const int W = InfoHeader.biWidth, H = InfoHeader.biHeight;
+		BYTE* buf = new BYTE[H * ByteLine];
+		for (int i = 0; i < H * ByteLine; i++) buf[i] = PixelData[i];
+		for (int y = 0; y < H; y++)
+			for (int x = 0; x < W; x++) {
+				Color c = GetColor(x, y, buf, ByteLine, W, H);
+				Color sum_c = Color(0, 0, 0);
+				double sum_weight = 0;
+				for (int j = y - size / 2; j <= y + size / 2; j++) {
+					for (int i = x - size / 2; i <= x + size / 2; i++) {
+						if (i < 0 || i >= W || j < 0 || j >= H) continue;
+						Color c_ij = GetColor(i, j, buf, ByteLine, W, H);
+						Color delta_c = c_ij - c;
+						double dist_sq = (x - i)*(x - i) + (y - j)*(y - j),
+							   deltaI_sq = delta_c.R*delta_c.R + delta_c.G*delta_c.G + delta_c.B*delta_c.B;
+						double w = exp(-dist_sq / (2.0*size*size) - deltaI_sq / (2.0*sigma_r*sigma_r));
+						sum_c = sum_c + c_ij * w;
+						sum_weight += w;
+					}
+				}
+				sum_c = sum_c / sum_weight;
+				SetColor(x, y, sum_c);
+			}
+		free(buf);
 	}
 	else {
 		std::cout << "ERROR Unresolved command @ Filter()" << std::endl;

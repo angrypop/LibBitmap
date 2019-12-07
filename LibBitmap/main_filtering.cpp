@@ -8,6 +8,7 @@
 */
 #include <Windows.h>
 #include <iostream>
+#include <string>
 #include "bmp.h"
 using namespace std;
 
@@ -20,18 +21,16 @@ int main() {
 		"laplacian ",
 		"laplacian -fuse",
 		"laplacian -binary",
-		"laplacian -extend -fuse" };
-	for (int i = 1; i <= 6; i++) {
-		BMP filtering;
-		filtering.Read(inpath[1] + ".bmp");
-		filtering.Filter(cmd[i]);
-		filtering.Save(inpath[1] + "_" + cmd[i] + "_.bmp");
-	}
-	for (int i = 1; i <= 2; i++) {
-		BMP filtering;
-		filtering.Read(inpath[1] + ".bmp");
-		filtering.Filter(cmd[i], 11);
-		filtering.Save(inpath[1] + "_" + cmd[i] + "_size5_.bmp");
+		"laplacian -extend -fuse",
+		"bilateral" };
+	int sigma[10] = {1, 10, 25, 50, 100, 1000};
+	for (int size = 5; size <= 25; size += 5) {
+		for (int i = 0; i < 6; i++) {
+			BMP filtering;
+			filtering.Read(inpath[5] + ".bmp");
+			filtering.Filter(cmd[7], size, sigma[i]);
+			filtering.Save(inpath[5] + "_" + cmd[7] + "_size" + to_string(size) + "_sigma" + to_string(sigma[i]) + ".bmp");
+		}
 	}
 	system("pause");
 	return 0;
