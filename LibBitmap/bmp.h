@@ -41,6 +41,7 @@ class BMP {
 	/* bmp_io.cpp */
     bool Read(std::string FileName);
     bool Save(std::string FileName);
+	bool PrintCOE(std::string FileName);
 	void HistPrintCSV(std::string FileName);
 
 

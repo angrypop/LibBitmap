@@ -42,6 +42,35 @@ bool BMP::Save(std::string FileName) {
 	return 1;
 }
 
+bool BMP::PrintCOE(std::string FileName) {
+	/* .coe files are used in Xilinx ISE to initialize ROM */
+	/* The output image is vertically flipped */
+	/* color: {B(4bits), G(4bits), R(4bits) */
+	FILE* fp = fopen(FileName.c_str(), "w");
+	if (fp == NULL) {
+		/* Error saving target image */
+		std::cout << "ERROR saving file " << FileName.c_str() << std::endl;
+		system("pause");
+		return 0;
+	}
+	int cnt = 0;
+	std::cout << InfoHeader.biWidth << "*" << InfoHeader.biHeight << std::endl;
+	fprintf(fp, "memory_initialization_radix=16;\n");
+	fprintf(fp, "memory_initialization_vector=\n");
+	for (int y = InfoHeader.biHeight - 1; y >= 0; y--) {
+		for (int x = 0; x < InfoHeader.biWidth; x++) {
+			cnt++;
+			Color c = GetColor(x, y);
+			fprintf(fp, "%x%x%x", c.B / 16, c.G / 16, c.R / 16);
+			if (y == 0 && x == InfoHeader.biWidth - 1) fprintf(fp, ";");
+			else fprintf(fp, ",");
+		}
+	}
+	std::cout << "Items outputed in .coe file: " << cnt << std::endl;
+	fclose(fp);
+	return 1;
+}
+
 void BMP::HistPrintCSV(std::string FileName) {
 	FILE* fp = fopen(FileName.c_str(), "w");/* Expected to be a .csv file */
 	int n[256], N = InfoHeader.biHeight*InfoHeader.biWidth;

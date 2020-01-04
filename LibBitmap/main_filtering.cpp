@@ -12,7 +12,7 @@
 #include "bmp.h"
 using namespace std;
 
-int main() {
+int main_filtering() {
 	std::string inpath[10] = { "RESERVED", "../Image/Input1", "../Image/Input2", "../Image/Input3", "../Image/Input4", "../Image/Input5", "../Image/Input6" };
 	
 	std::string cmd[10] = { "",
